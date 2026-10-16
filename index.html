@@ -350,3 +350,78 @@ checkRepSession();
 </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIT Handouts Records System - Live Sync</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+body{font-family:'Poppins',sans-serif}
+</style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 min-h-screen">
+<script>
+  const GOOGLE_SHEET_API_URL = "https://script.google.com/macros/s/AKfycbz2DGJZ1J66ZoDw1MKXAarwbyp17dYUvLGxcIHmMzmJX7MzdoVKqS3NaEqhEjUnY7TP/exec";
+  const REP_WHATSAPP_NUMBER = "233000000000";
+</script>
+<header class="bg-white shadow-sm sticky top-0 z-50">
+  <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white"><i class="fas fa-book"></i></div>
+      <div><h1 class="font-bold text-slate-800">DIT HANDOUTS</h1><p class="text-xs text-green-600 font-semibold">● Live Sync Active - All Devices</p></div>
+    </div>
+    <div class="flex gap-2">
+      <button onclick="switchView('student')" id="btn-student" class="px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium">Student</button>
+      <button onclick="switchView('rep')" id="btn-rep" class="px-4 py-2 rounded-full bg-white border text-sm">Rep View</button>
+    </div>
+  </div>
+</header>
+<main class="max-w-6xl mx-auto px-4 py-6">
+<div id="view-student">
+  <div class="bg-white rounded-[24px] shadow-sm p-6 md:p-8 max-w-2xl mx-auto">
+    <div class="text-center mb-6"><h2 class="text-2xl font-bold">Student Handout Request</h2><p class="text-sm text-green-600 mt-1">✅ Will save to cloud so Rep sees it instantly</p></div>
+    <form id="studentForm" class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label class="text-sm font-medium">Full Name</label><input id="s_name" required class="w-full mt-1 px-4 py-3 rounded-xl border"></div>
+        <div><label class="text-sm font-medium">Index Number</label><input id="s_index" required class="w-full mt-1 px-4 py-3 rounded-xl border"></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label class="text-sm font-medium">Course</label><select id="s_course" class="w-full mt-1 px-4 py-3 rounded-xl border"><option>DIT Level 100</option><option>DIT Level 200</option><option>DIT Level 300</option><option>DIT Level 400</option></select></div>
+        <div><label class="text-sm font-medium">Phone</label><input id="s_phone" required class="w-full mt-1 px-4 py-3 rounded-xl border"></div>
+      </div>
+      <div><label class="text-sm font-medium">Handout</label><select id="s_handout" class="w-full mt-1 px-4 py-3 rounded-xl border"><option>Data Structures</option><option>Networking Notes</option><option>Programming C++</option><option>Database Systems</option><option>Other</option></select></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="text-sm font-medium">Quantity</label><input id="s_qty" type="number" value="1" min="1" class="w-full mt-1 px-4 py-3 rounded-xl border"></div>
+        <div><label class="text-sm font-medium">Payment</label><select id="s_payment" class="w-full mt-1 px-4 py-3 rounded-xl border"><option>Paid</option><option>Not Paid</option><option>Partial</option></select></div>
+      </div>
+      <button id="submitBtn" type="submit" class="w-full bg-blue-600 text-white py-3.5 rounded-xl font-semibold mt-2">Save to Cloud & Notify Rep</button>
+      <p id="statusMsg" class="text-center text-sm mt-2"></p>
+    </form>
+  </div>
+</div>
+<div id="view-rep" class="hidden">
+  <div class="bg-white rounded-[24px] shadow-sm p-4 md:p-6">
+    <div class="flex flex-col md:flex-row justify-between gap-3 mb-4">
+      <h2 class="text-xl font-bold">All Records (Live)</h2>
+      <div class="flex gap-2"><input id="searchBox" oninput="filterRecords()" placeholder="Search..." class="px-4 py-2 rounded-full border text-sm w-52"><button onclick="loadFromSheet()" class="px-4 py-2 rounded-full bg-slate-900 text-white text-sm">Refresh</button></div>
+    </div>
+    <div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-slate-500 border-b"><th class="py-2 px-2">Date</th><th>Name</th><th>Index</th><th>Course</th><th>Handout</th><th>Qty</th><th>Payment</th><th>Chat</th></tr></thead><tbody id="recordsBody"><tr><td colspan="8" class="text-center py-10">Loading from cloud...</td></tr></tbody></table></div>
+  </div>
+</div>
+</main>
+<script>
+let allRecords=[];
+function switchView(v){document.getElementById('view-student').classList.toggle('hidden',v!=='student');document.getElementById('view-rep').classList.toggle('hidden',v!=='rep');document.getElementById('btn-student').className=v==='student'?'px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium':'px-4 py-2 rounded-full bg-white border text-sm';document.getElementById('btn-rep').className=v==='rep'?'px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-medium':'px-4 py-2 rounded-full bg-white border text-sm';if(v==='rep')loadFromSheet();}
+document.getElementById('studentForm').addEventListener('submit',async(e)=>{e.preventDefault();const btn=document.getElementById('submitBtn');const msg=document.getElementById('statusMsg');const record={id:Date.now(),date:new Date().toLocaleString(),name:document.getElementById('s_name').value.trim(),indexNo:document.getElementById('s_index').value.trim(),course:document.getElementById('s_course').value,phone:document.getElementById('s_phone').value.trim(),handout:document.getElementById('s_handout').value,qty:document.getElementById('s_qty').value,payment:document.getElementById('s_payment').value};btn.disabled=true;btn.innerHTML='Saving to cloud...';try{await fetch(GOOGLE_SHEET_API_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(record)});await new Promise(r=>setTimeout(r,1500));msg.innerHTML="<span class='text-green-600 font-semibold'>✅ Saved! Rep can see it.</span>";const waText=`DIT Handout Request%0AName: ${record.name}%0AIndex: ${record.indexNo}%0ACourse: ${record.course}%0AHandout: ${record.handout} x${record.qty}%0APayment: ${record.payment}%0APhone: ${record.phone}`;window.open(`https://wa.me/${REP_WHATSAPP_NUMBER}?text=${waText}`,'_blank');e.target.reset();}catch(err){msg.innerHTML=`<span class='text-red-600'>Error: ${err.message}</span>`;}finally{btn.disabled=false;btn.innerHTML='Save to Cloud & Notify Rep';}});
+async function loadFromSheet(){const tbody=document.getElementById('recordsBody');try{tbody.innerHTML='<tr><td colspan="8" class="text-center py-10">Loading...</td></tr>';const res=await fetch(GOOGLE_SHEET_API_URL);const data=await res.json();allRecords=data.reverse();renderTable(allRecords);}catch(err){tbody.innerHTML=`<tr><td colspan="8" class="text-center py-10 text-red-500">Failed: ${err.message}</td></tr>`;}}
+function renderTable(list){const tbody=document.getElementById('recordsBody');if(!list.length){tbody.innerHTML='<tr><td colspan="8" class="text-center py-10">No records yet</td></tr>';return;}tbody.innerHTML=list.map(r=>`<tr class="border-b hover:bg-slate-50"><td class="py-2 px-2 text-xs">${r.date||''}</td><td class="font-medium">${r.name||''}<br><span class="text-xs text-slate-500">${r.phone||''}</span></td><td>${r.indexNo||''}</td><td>${r.course||''}</td><td>${r.handout||''}</td><td>${r.qty||1}</td><td><span class="px-2 py-1 rounded-full text-xs ${r.payment==='Paid'?'bg-green-100 text-green-700':'bg-amber-100 text-amber-700'}">${r.payment||''}</span></td><td><a href="https://wa.me/${String(r.phone||'').replace(/[^0-9]/g,'')}" target="_blank" class="text-green-600">WA</a></td></tr>`).join('');}
+function filterRecords(){const q=document.getElementById('searchBox').value.toLowerCase();const filtered=allRecords.filter(r=>(r.name+r.indexNo+r.course+r.handout).toLowerCase().includes(q));renderTable(filtered);}
+setInterval(()=>{if(!document.getElementById('view-rep').classList.contains('hidden'))loadFromSheet();},15000);
+loadFromSheet();
+</script>
+</body>
+</html>
