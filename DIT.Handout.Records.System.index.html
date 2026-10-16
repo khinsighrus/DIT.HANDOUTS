@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>DIT Handout Payment System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;max-width:950px;margin:auto;padding:15px;background:#f2f5f9}
+h1{text-align:center;color:#004aad}
+.box{background:white;padding:20px;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,0.1);margin-top:15px}
+input,select{padding:12px;width:100%;box-sizing:border-box;border:1px solid #ccc;border-radius:8px;margin:7px 0}
+button{padding:12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;margin-top:8px}
+.student-btn{background:#25D366;color:white}
+.rep-btn{background:#004aad;color:white}
+.approve{background:#25D366;color:white;width:auto;padding:7px 12px;margin:2px}
+.reject{background:#ff4444;color:white;width:auto;padding:7px 12px;margin:2px}
+.received{background:#004aad;color:white;width:auto;padding:7px 12px;margin:2px}
+.logout{background:#111;color:white;margin-top:15px}
+.small{font-size:13px;color:#555;text-align:center}
+.tabs{display:flex;gap:10px;justify-content:center}
+.tab{padding:10px 20px;border-radius:20px;background:#ddd;border:none;width:auto;cursor:pointer}
+.tab.active{background:#004aad;color:white}
+.student-row{border-bottom:1px solid #eee;padding:12px 5px;display:flex;flex-direction:column;gap:6px}
+.badge{padding:3px 8px;border-radius:10px;font-size:12px;color:white}
+.pending{background:orange}
+.approved{background:green}
+.rec{background:#004aad}
+.totals{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:10px 0}
+.total-card{background:#004aad;color:white;padding:12px;border-radius:10px;text-align:center}
+.total-card.green{background:#25D366}
+.total-card.orange{background:#ff9800}
+.personal-totals{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.personal-card{padding:12px;border-radius:10px;text-align:center;border:2px solid #004aad;background:#eef4ff}
+.personal-card.my-total{background:#004aad;color:white}
+.personal-card b{display:block;font-size:18px;margin-top:4px}
+.handout-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f9fbff;padding:12px;border-radius:10px;border:1px solid #ddd;margin:8px 0}
+.handout-grid label{display:flex;align-items:center;gap:6px;font-size:14px;background:white;padding:8px;border-radius:8px;border:1px solid #eee;cursor:pointer}
+.handout-grid input[type=checkbox]{width:auto;margin:0}
+.reset-box{background:#fff8e1;border:1px dashed #ff9800;padding:15px;border-radius:10px;margin-top:15px;display:none}
+.link-btn{background:none;color:#004aad;text-decoration:underline;border:none;padding:5px;width:auto;font-size:13px;cursor:pointer}
+.danger-box{background:#ffe6e6;border:2px solid #ff4444;padding:15px;border-radius:10px;margin-top:20px}
+.date-filter{background:#eef4ff;border:2px solid #004aad;padding:12px;border-radius:10px;margin:10px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.date-filter div{flex:1;min-width:130px}
+.date-filter label{font-size:12px;font-weight:bold;color:#004aad}
+.daily-summary{background:#004aad;color:white;padding:10px;border-radius:8px;text-align:center;margin-top:10px;font-weight:bold}
+</style>
+</head>
+<body>
+
+<h1>DIT Handout Payment System</h1>
+<p class="small" id="todayDisplay"></p>
+
+<div class="tabs">
+<button class="tab active" id="tS" onclick="setView('student')">Student View</button>
+<button class="tab" id="tR" onclick="setView('rep')">Rep View</button>
+</div>
+
+<div id="studentView" class="box">
+<h2 style="text-align:center">Student Payment Form - <span id="studentDate"></span></h2>
+<input type="text" id="sName" placeholder="Full Name">
+<input type="text" id="sId" placeholder="Student ID">
+<input type="number" id="sAmount" placeholder="Amount Paid">
+<input type="text" id="sMomo" placeholder="Your MoMo Name">
+<label style="font-weight:bold;color:#004aad;font-size:14px">Select Handout(s):</label>
+<div class="handout-grid">
+<label><input type="checkbox" value="Programming"> Programming</label>
+<label><input type="checkbox" value="Fundamentals"> Fundamentals</label>
+<label><input type="checkbox" value="Accounting"> Accounting</label>
+<label><input type="checkbox" value="Records Management"> Records Mgt</label>
+<label><input type="checkbox" value="Com Skills"> Com Skills</label>
+<label><input type="checkbox" value="Pure Maths"> Pure Maths</label>
+<label><input type="checkbox" value="System Support"> System Support</label>
+<label><input type="checkbox" value="Economics"> Economics</label>
+</div>
+<label style="font-size:13px"><input type="checkbox" id="checkAll" onchange="toggleAll()"> <b>Select All</b></label>
+<label style="font-weight:bold;color:#004aad;font-size:13px;margin-top:10px;display:block">Who did you send the money to?</label>
+<select id="sPaidTo">
+<option value="">Select Rep You Paid To</option>
+<option value="Justice|233559131358">Justice - 0559131358</option>
+<option value="Sally|233205345988">Sally - 0205345988</option>
+<option value="Pokuaa|233594507708">Pokuaa - 0594507708</option>
+<option value="Seyram|233596651979">Seyram - 0596651979</option>
+</select>
+<input type="text" id="sPhone" placeholder="Your WhatsApp Number">
+<button class="student-btn" onclick="studentPay()">1. Save Payment Record</button>
+<button class="student-btn" style="background:#128C7E" id="waBtn" onclick="sendWhatsApp()" disabled>2. Send WhatsApp to Selected Rep</button>
+<p id="studentMsg" style="text-align:center;font-weight:bold;margin-top:10px"></p>
+</div>
+
+<div id="repView" class="box" style="display:none">
+<div id="loginBox">
+<h3>Course Rep Login</h3>
+<input type="password" id="repPass" placeholder="Enter Rep Password">
+<button class="rep-btn" onclick="repLogin()">Login</button>
+<button class="link-btn" onclick="toggleReset('resetBoxLogin')">Forgot Password?</button>
+<div id="resetBoxLogin" class="reset-box">
+<h4>Reset Password</h4>
+<input type="password" id="oldPass" placeholder="Current Password">
+<input type="password" id="newPass" placeholder="New Password">
+<input type="password" id="confirmNewPass" placeholder="Confirm New Password">
+<button class="rep-btn" style="background:#ff9800" onclick="resetPassword()">Change Password</button>
+<p class="small" id="resetMsg"></p>
+</div>
+</div>
+
+<div id="repPanel" style="display:none">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+<b style="color:#004aad">Rep Dashboard</b>
+<select id="myRepIdentity" onchange="loadRep()" style="width:auto;padding:6px;border-radius:20px">
+<option value="">Who are you?</option>
+<option value="Justice">I am Justice</option>
+<option value="Sally">I am Sally</option>
+<option value="Pokuaa">I am Pokuaa</option>
+<option value="Seyram">I am Seyram</option>
+</select>
+</div>
+
+<div class="date-filter">
+<div><label>Select Date</label><input type="date" id="filterDate" onchange="loadRep()"></div>
+<div><label>Quick</label><select id="quickDate" onchange="setQuickDate()"><option value="">All Time</option><option value="today" selected>Today</option><option value="yesterday">Yesterday</option><option value="thisweek">This Week</option></select></div>
+<div><button class="rep-btn" style="padding:10px" onclick="clearDateFilter()">Show All</button></div>
+</div>
+<div class="daily-summary" id="dailySummary">Total: GHS 0</div>
+
+<div class="totals">
+<div class="total-card"><div>Total (Date)</div><b id="totalAll">GHS 0</b></div>
+<div class="total-card green"><div>Approved</div><b id="totalApproved">GHS 0</b></div>
+<div class="total-card orange"><div>Pending</div><b id="totalPending">GHS 0</b></div>
+</div>
+
+<h3 style="margin:15px 0 5px;color:#004aad">💰 Personal Totals</h3>
+<div class="personal-totals">
+<div class="personal-card" id="card-Justice"><span>Justice</span><b id="total-Justice">GHS 0</b><small id="count-Justice">0</small></div>
+<div class="personal-card" id="card-Sally"><span>Sally</span><b id="total-Sally">GHS 0</b><small id="count-Sally">0</small></div>
+<div class="personal-card" id="card-Pokuaa"><span>Pokuaa</span><b id="total-Pokuaa">GHS 0</b><small id="count-Pokuaa">0</small></div>
+<div class="personal-card" id="card-Seyram"><span>Seyram</span><b id="total-Seyram">GHS 0</b><small id="count-Seyram">0</small></div>
+</div>
+
+<div id="myTotalBox" style="display:none;background:#fff3cd;border:2px dashed #ff9800;padding:12px;border-radius:10px;text-align:center;margin:10px 0">
+<b>Your Total (<span id="myName"></span>)</b><br>
+<span style="font-size:22px;font-weight:bold;color:#004aad" id="myPersonalTotal">GHS 0</span>
+<span id="myPersonalCount" style="display:block;font-size:13px"></span>
+</div>
+
+<div style="display:flex;gap:5px;margin-top:10px;flex-wrap:wrap">
+<input type="text" id="searchRep" placeholder="Search" onkeyup="loadRep()" style="width:30%">
+<select id="filterStatus" onchange="loadRep()" style="width:15%"><option value="all">All</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="received">Received</option><option value="not_received">Not Received</option></select>
+<select id="filterRep" onchange="loadRep()" style="width:15%"><option value="all">All Reps</option><option value="Justice">Justice</option><option value="Sally">Sally</option><option value="Pokuaa">Pokuaa</option><option value="Seyram">Seyram</option></select>
+<select id="filterHandout" onchange="loadRep()" style="width:15%"><option value="all">All Handouts</option><option>Programming</option><option>Fundamentals</option><option>Accounting</option><option>Records Management</option><option>Com Skills</option><option>Pure Maths</option><option>System Support</option><option>Economics</option></select>
+<button class="rep-btn" style="width:15%;padding:8px;background:black" onclick="exportExcel()">Export</button>
+</div>
+
+<div id="recordsList"></div>
+
+<button class="link-btn" onclick="toggleReset('resetBoxDash')">Change Password</button>
+<div id="resetBoxDash" class="reset-box">
+<h4>Change Password</h4>
+<input type="password" id="oldPass2" placeholder="Current Password">
+<input type="password" id="newPass2" placeholder="New Password">
+<input type="password" id="confirmNewPass2" placeholder="Confirm New Password">
+<button class="rep-btn" style="background:#ff9800" onclick="resetPasswordDashboard()">Update Password</button>
+<p class="small" id="resetMsg2"></p>
+</div>
+
+<div class="danger-box">
+<h3 style="margin:0 0 10px;color:#ff4444">⚠️ NEW SEMESTER - RESET EVERYTHING</h3>
+<p class="small" style="text-align:left">Deletes all money, approvals, received, pending → ZERO</p>
+<button class="link-btn" style="color:#ff4444;font-weight:bold" onclick="toggleReset('semesterResetBox')">Open Full Reset</button>
+<div id="semesterResetBox" style="display:none;margin-top:10px">
+<input type="password" id="confirmResetPass" placeholder="Enter Current Password">
+<input type="text" id="confirmResetText" placeholder="Type RESET">
+<button class="rep-btn" style="background:#ff4444" onclick="resetEverything()">🔴 RESET EVERYTHING NOW</button>
+<p class="small" id="semesterResetMsg"></p>
+</div>
+</div>
+
+<button class="logout" onclick="repLogout()">Logout Rep</button>
+</div>
+</div>
+
+<script>
+// SET DEFAULT ONLY IF NOT EXISTS - ALLOWS NEW PASSWORD TO WORK
+if(!localStorage.getItem('repPassword')){
+  localStorage.setItem('repPassword','DIT911');
+}
+
+let records = JSON.parse(localStorage.getItem('dit_handout_records_v2')) || [];
+let lastRecord = null;
+let repLoggedIn = localStorage.getItem('repLoggedIn')==='true';
+let myIdentity = localStorage.getItem('myRepIdentity') || "";
+
+function getCurrentPassword(){ return localStorage.getItem('repPassword'); }
+function toISODate(d){ return d.toISOString().split('T')[0]; }
+document.getElementById('todayDisplay').innerText = "Today: " + new Date().toLocaleDateString();
+document.getElementById('studentDate').innerText = new Date().toLocaleDateString();
+document.getElementById('filterDate').value = toISODate(new Date());
+
+function toggleReset(id){ let box=document.getElementById(id); box.style.display = box.style.display==="none" || box.style.display===""? "block" : "none"; }
+function setView(view){ document.getElementById('studentView').style.display= view==='student'?'block':'none'; document.getElementById('repView').style.display= view==='rep'?'block':'none'; document.getElementById('tS').classList.toggle('active',view==='student'); document.getElementById('tR').classList.toggle('active',view==='rep'); if(view==='rep') checkRepSession(); }
+function checkRepSession(){ document.getElementById('myRepIdentity').value = myIdentity; if(repLoggedIn){ document.getElementById('loginBox').style.display="none"; document.getElementById('repPanel').style.display="block"; loadRep(); } else{ document.getElementById('loginBox').style.display="block"; document.getElementById('repPanel').style.display="none"; } }
+function toggleAll(){ let all=document.getElementById('checkAll').checked; document.querySelectorAll('.handout-grid input[type=checkbox]').forEach(c=>c.checked=all); }
+function getSelectedHandouts(){ let sel=[]; document.querySelectorAll('.handout-grid input[type=checkbox]:checked').forEach(c=>sel.push(c.value)); return sel; }
+function setQuickDate(){ let q=document.getElementById('quickDate').value; let today=new Date(); if(q==="today") document.getElementById('filterDate').value=toISODate(today); else if(q==="yesterday"){ let y=new Date(); y.setDate(today.getDate()-1); document.getElementById('filterDate').value=toISODate(y); } else{ document.getElementById('filterDate').value=""; } loadRep(); }
+function clearDateFilter(){ document.getElementById('filterDate').value=""; document.getElementById('quickDate').value=""; loadRep(); }
+
+function studentPay(){
+ let name=document.getElementById('sName').value.trim();
+ let id=document.getElementById('sId').value.trim().toUpperCase();
+ let amount=parseFloat(document.getElementById('sAmount').value.trim());
+ let momo=document.getElementById('sMomo').value.trim();
+ let paidToRaw=document.getElementById('sPaidTo').value;
+ let phone=document.getElementById('sPhone').value.trim();
+ let handouts=getSelectedHandouts();
+ if(!name||!id||!amount||!momo||!paidToRaw){alert("Fill all fields");return;}
+ if(handouts.length===0){alert("Select handout");return;}
+ let parts=paidToRaw.split("|");
+ let now=new Date();
+ let rec={id,name,amount,momoName:momo,handout:handouts.join(", "),handoutsArray:handouts,phone,paidToName:parts[0],paidToNumber:parts[1],paymentDate:now.toLocaleDateString(),paymentTime:now.toLocaleTimeString(),isoDate:toISODate(now),isoDateTime:now.toISOString(),status:"pending",received:"not_received",receivedDate:"",receivedTime:"",receivedIsoDate:""};
+ records.push(rec); lastRecord=rec;
+ localStorage.setItem('dit_handout_records_v2',JSON.stringify(records));
+ document.getElementById('studentMsg').innerHTML=`<span style='color:green'>Saved! Notify Rep ${rec.paidToName}</span>`;
+ document.getElementById('waBtn').disabled=false;
+}
+function sendWhatsApp(){
+ if(!lastRecord){alert("First save");return;}
+ let msg=`*DIT HANDOUT PAYMENT - ${lastRecord.isoDate}*%0AName: ${lastRecord.name}%0AID: ${lastRecord.id}%0AAmount: GHS ${lastRecord.amount}%0AMoMo Name: ${lastRecord.momoName}%0AHandouts: ${lastRecord.handout}%0APaid To: ${lastRecord.paidToName}%0ADate: ${lastRecord.paymentDate} ${lastRecord.paymentTime}%0APhone: ${lastRecord.phone}`;
+ window.open(`https://wa.me/${lastRecord.paidToNumber}?text=${msg}`,'_blank');
+ document.getElementById('studentMsg').innerHTML=`<span style='color:green'>WhatsApp sent!</span>`;
+ document.getElementById('sName').value="";document.getElementById('sId').value="";document.getElementById('sAmount').value="";document.getElementById('sMomo').value="";document.querySelectorAll('.handout-grid input[type=checkbox]').forEach(c=>c.checked=false);document.getElementById('checkAll').checked=false;document.getElementById('waBtn').disabled=true;
+}
+
+function repLogin(){
+  if(document.getElementById('repPass').value!==getCurrentPassword()){
+    alert("Wrong password");return;
+  }
+  repLoggedIn=true; localStorage.setItem('repLoggedIn','true');
+  document.getElementById('loginBox').style.display="none"; document.getElementById('repPanel').style.display="block"; loadRep();
+}
+function repLogout(){ if(confirm("Logout?")){ repLoggedIn=false; localStorage.removeItem('repLoggedIn'); document.getElementById('repPass').value=""; checkRepSession(); setView('student'); } }
+
+function resetPassword(){
+ let oldP=document.getElementById('oldPass').value;
+ let newP=document.getElementById('newPass').value;
+ let confirmP=document.getElementById('confirmNewPass').value;
+ if(oldP!==getCurrentPassword()){document.getElementById('resetMsg').innerText="❌ Wrong current password";return;}
+ if(newP.length<4){document.getElementById('resetMsg').innerText="❌ Too short (min 4)";return;}
+ if(newP!==confirmP){document.getElementById('resetMsg').innerText="❌ New passwords do not match";return;}
+ localStorage.setItem('repPassword',newP);
+ document.getElementById('resetMsg').innerText="✅ Password changed! Use new password to login next time.";
+ document.getElementById('oldPass').value="";document.getElementById('newPass').value="";document.getElementById('confirmNewPass').value="";
+}
+function resetPasswordDashboard(){
+ let oldP=document.getElementById('oldPass2').value;
+ let newP=document.getElementById('newPass2').value;
+ let confirmP=document.getElementById('confirmNewPass2').value;
+ if(oldP!==getCurrentPassword()){document.getElementById('resetMsg2').innerText="❌ Wrong current password";return;}
+ if(newP.length<4){document.getElementById('resetMsg2').innerText="❌ Too short";return;}
+ if(newP!==confirmP){document.getElementById('resetMsg2').innerText="❌ Passwords do not match";return;}
+ localStorage.setItem('repPassword',newP);
+ document.getElementById('resetMsg2').innerText="✅ Password updated! Next login use: "+newP;
+ document.getElementById('oldPass2').value="";document.getElementById('newPass2').value="";document.getElementById('confirmNewPass2').value="";
+}
+
+function resetEverything(){
+ let pass=document.getElementById('confirmResetPass').value;
+ let text=document.getElementById('confirmResetText').value;
+ if(pass!==getCurrentPassword()){document.getElementById('semesterResetMsg').innerText="❌ Wrong password";return;}
+ if(text!=="RESET"){document.getElementById('semesterResetMsg').innerText="❌ Type RESET";return;}
+ if(!confirm("DELETE EVERYTHING? Money + Approvals + Received + Pending = ZERO")) return;
+ localStorage.setItem('dit_backup_'+toISODate(new Date())+'_'+Date.now(), JSON.stringify(records));
+ records = [];
+ localStorage.setItem('dit_handout_records_v2', JSON.stringify(records));
+ document.getElementById('semesterResetMsg').innerText="✅ DONE! All reset to ZERO";
+ document.getElementById('confirmResetPass').value="";document.getElementById('confirmResetText').value="";
+ loadRep();
+}
+function loadRep(){
+ myIdentity=document.getElementById('myRepIdentity').value; localStorage.setItem('myRepIdentity',myIdentity);
+ let search=(document.getElementById('searchRep').value||"").toLowerCase();
+ let filter=document.getElementById('filterStatus').value;
+ let filterRep=document.getElementById('filterRep').value;
+ let filterHandout=document.getElementById('filterHandout').value;
+ let filterDate=document.getElementById('filterDate').value;
+ let quick=document.getElementById('quickDate').value;
+ let list=document.getElementById('recordsList'); list.innerHTML="";
+ let dateFiltered = records;
+ if(filterDate){ dateFiltered = records.filter(r=>r.isoDate===filterDate); }
+ else if(quick==="thisweek"){ let weekAgo=new Date(); weekAgo.setDate(weekAgo.getDate()-7); dateFiltered = records.filter(r=> new Date(r.isoDateTime) >= weekAgo); }
+ let totalAll=dateFiltered.reduce((s,r)=>s+Number(r.amount),0);
+ let totalApproved=dateFiltered.filter(r=>r.status==='approved').reduce((s,r)=>s+Number(r.amount),0);
+ let totalPending=dateFiltered.filter(r=>r.status==='pending').reduce((s,r)=>s+Number(r.amount),0);
+ document.getElementById('totalAll').innerText="GHS "+totalAll;
+ document.getElementById('totalApproved').innerText="GHS "+totalApproved;
+ document.getElementById('totalPending').innerText="GHS "+totalPending;
+ document.getElementById('dailySummary').innerText = `Total: GHS ${totalAll} | ${dateFiltered.length} Students`;
+ ["Justice","Sally","Pokuaa","Seyram"].forEach(repName=>{
+   let repRecs=dateFiltered.filter(r=>r.paidToName===repName);
+   let repTotal=repRecs.reduce((s,r)=>s+Number(r.amount),0);
+   document.getElementById(`total-${repName}`).innerText="GHS "+repTotal;
+   document.getElementById(`count-${repName}`).innerText=repRecs.length+" payments";
+   document.getElementById(`card-${repName}`).classList.remove('my-total');
+ });
+ if(myIdentity){
+   document.getElementById(`card-${myIdentity}`).classList.add('my-total');
+   let myRecs=dateFiltered.filter(r=>r.paidToName===myIdentity);
+   let myTotal=myRecs.reduce((s,r)=>s+Number(r.amount),0);
+   document.getElementById('myTotalBox').style.display="block";
+   document.getElementById('myName').innerText=myIdentity;
+   document.getElementById('myPersonalTotal').innerText="GHS "+myTotal;
+   document.getElementById('myPersonalCount').innerText=myRecs.length+" students";
+ }else{ document.getElementById('myTotalBox').style.display="none"; }
+ let filtered=dateFiltered.filter(r=>{
+   let ms=r.name.toLowerCase().includes(search)||r.id.toLowerCase().includes(search);
+   let mf=filter==='all'||r.status===filter||r.received===filter;
+   let mr=filterRep==='all'||r.paidToName===filterRep;
+   let mh=filterHandout==='all'||(r.handoutsArray?r.handoutsArray.includes(filterHandout):r.handout.includes(filterHandout));
+   return ms&&mf&&mr&&mh;
+ });
+ filtered.slice().reverse().forEach(r=>{
+   let realIdx=records.indexOf(r);
+   let proof=r.received==='received'?`Received on ${r.receivedDate} ${r.receivedTime}`:`Not yet received`;
+   list.innerHTML+=`<div class="student-row">
+   <div><b>${r.name}</b> (${r.id}) - <b>GHS ${r.amount}</b> - <small>${r.isoDate}</small></div>
+   <div style="font-size:13px;background:#f0f7ff;padding:5px;border-radius:5px">📚 ${r.handout}</div>
+   <div style="font-size:13px">MoMo: ${r.momoName} | Paid To: <b>${r.paidToName}</b> | ${r.paymentDate} ${r.paymentTime}</div>
+   <div style="font-size:12px;color:#004aad">${proof}</div>
+   <div><span class="badge ${r.status}">${r.status}</span> <span class="badge ${r.received}">${r.received.replace('_',' ')}</span></div>
+   <div style="display:flex;flex-wrap:wrap">
+   ${r.status==='pending'?`<button class="approve" onclick="approvePayment(${realIdx})">Approve</button>`:`<button class="reject" onclick="unapprove(${realIdx})">Unapprove</button>`}
+   <button class="received" onclick="markReceived(${realIdx})">Mark Received + Date</button>
+   <button class="reject" onclick="markNotReceived(${realIdx})">Not Received</button>
+   <button class="reject" style="background:#555" onclick="deleteRec(${realIdx})">Delete</button>
+   </div></div>`;
+ });
+}
+function approvePayment(i){records[i].status='approved';saveAndReload();}
+function unapprove(i){records[i].status='pending';saveAndReload();}
+function markReceived(i){let n=new Date();records[i].received='received';records[i].receivedDate=n.toLocaleDateString();records[i].receivedTime=n.toLocaleTimeString();records[i].receivedIsoDate=toISODate(n);saveAndReload();}
+function markNotReceived(i){records[i].received='not_received';records[i].receivedDate="";records[i].receivedTime="";records[i].receivedIsoDate="";saveAndReload();}
+function deleteRec(i){if(confirm("Delete?")){records.splice(i,1);saveAndReload();}}
+function saveAndReload(){localStorage.setItem('dit_handout_records_v2',JSON.stringify(records));loadRep();}
+function exportExcel(){
+ let filterDate=document.getElementById('filterDate').value;
+ let data = filterDate? records.filter(r=>r.isoDate===filterDate) : records;
+ if(data.length===0){alert("No records");return;}
+ let csv="Name,Student ID,Amount,MoMo Name,Handouts,Paid To Rep,Payment Date,ISO Date,Payment Status,Received Status,Received Date,Phone\n";
+ data.forEach(r=>{csv+=`"${r.name}","${r.id}","${r.amount}","${r.momoName}","${r.handout}","${r.paidToName}","${r.paymentDate} ${r.paymentTime}","${r.isoDate}","${r.status}","${r.received}","${r.receivedDate}","${r.phone}"\n`;});
+ let blob=new Blob([csv],{type:'text/csv'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`DIT_Payments_${filterDate||"AllTime"}_${toISODate(new Date())}.csv`;a.click();
+}
+checkRepSession();
+</script>
+</body>
+</html>
